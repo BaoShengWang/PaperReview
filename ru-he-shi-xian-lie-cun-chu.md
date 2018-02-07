@@ -4,15 +4,15 @@
 
 如何设计一个列存储数据库系统呢，毫无疑问，最快速，最简单，成本最小的方式就是充分利用现有的行数据库系统，例如，我们可以在postgresql中模拟列存储，最直观的模拟方式就是，将表垂直切分为多个column，每一个column存储为一个物理表，这样当查询column a和column b时，可以只去column a和columnb对应的物理表中查询数据，而不用查询所有列。这种方式最大的有点就是可以充分利用postgresql中所有的组件：storage manager，query execution，query optimizer等等。我们几乎不用编写什么新的代码就能利用列存储的优势：只从磁盘查询所需的列。事实上，早期就有人这么做过，并且查询性能还行：只有查询非常少数的几个列时，vertical partitioning才比行存储性能好。
 
-
-
 vertical partitioning可以认为是伪列存储。那么真正意义的列存储是什么样的呢？从目前的观点来看，现代真正意义上的列存储必须包含两个部分：
 
 * column storage，列存储，每一个column存储为一个独立的文件，column物理存储格式可以看作：
 
-          &lt;column header,value array&gt;
+  ```
+      &lt;column header,value array&gt;
 
-       column header描述了这个column的元数据信息，比如压缩编码，最大值，最小值等等。value array是一个连续存储的value数组。
+   column header描述了这个column的元数据信息，比如压缩编码，最大值，最小值等等。value array是一个连续存储的value数组。
+  ```
 
 * column query execution，查询执行引擎是面向列的，典型的查询执行引擎会用到下面几个技术：direct operate compression date，vectoried execution，late materilized。
 
@@ -29,8 +29,7 @@ tuple overhead和join cost太高了。在index-only中，性能更加糟糕。**
 
 在SSBM的性能测试中，我们在orderdate建立了分区\(partition\)，因此如果在orderdate上有谓词，那么将显著的提高性能，但System X在vertical partitioning和index-only等方式中，不支持partitioning，因此，在从图6中可以发现：traditional 平均性能要优于vertical partitionging和index-only。进一步的，仔细观察图6，除了fligh1，3，4中，traditional性能要都优于vertical partitioning，因为我们利用了System X的partitioning。**而在flight2中，因为Q2.1，Q2.2,Q2.3都没有用到orderdate，所以没有用到orderdate分区,traditional 和vertical partitioning性能相差不多。**
 
-作者也说了，如果不使用System X的partitioning功能，那么同样的查询，性能将降低一半。因此我们可以假设在vertical partitioning中，如果  
-采用partitioning，那么性能也能提高一倍。从而我们可以得出如下结论：
+作者也说了，如果不使用System X的partitioning功能，那么同样的查询，性能将降低一半。因此我们可以假设在vertical partitioning中，如果采用partitioning，那么性能也能提高一倍。从而我们可以得出如下结论：
 
 * 1.即使在行存储中，如果我们采用列存储方式来存储数据，查询性能也要优于行存储，当然了，优于tuple overhead和join cost等因素，查询的列不能太多，否则性能急剧下降。
 * 2.要想发挥列存储的性能，不能采用“在行存储中模拟列存储”这种方式，我们必须将存储层完全替换为列存储，也就是一个column一个文件。事实上，为了发挥列存储的最佳性能，只是将存储层替换为列存储是远远不够的，我们还要使用面向列的查询执行引擎\(query execution engin\)。
@@ -39,7 +38,7 @@ tuple overhead和join cost太高了。在index-only中，性能更加糟糕。**
 
 每一个列存储为一个物理表，为了重组元祖，需要添加一个类似tuple identifer的东西，用于唯一表示一个元祖。tuple identifier 可以是primary key，也可以是position。一般来说使用position要更好一些，因为position占用的存储空间要比primary key更小。为了提高性能，每一个物理表都在position上建立一个聚集索引，这样可以可以使用index-join来重组元祖。
 
-vertical partitioning最致命的问题：tuple overheads和join cost太高。
+**vertical partitioning最致命的问题：tuple overheads和join cost太高。**
 
 在 行存储中，tuple存储方式逻辑上如下：tuple header,position,value，每一个tuple都有一个tuple header，这个tuple header占用空间可能要比\[position,value\]的存储空间还要大。
 
