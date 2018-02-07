@@ -2,6 +2,14 @@
 
 本文内容主要摘自 Column-Stores vs. Row-Stores: How Different Are They Really?
 
+本论文主要结论概况如下：
+
+> 首先，尽管我们可以在行存储中通过vertical partitioning ，index only技术模拟列存储，但是这种模拟不会带来很好的性能提升，原因是tuple overhead开销太的了，在SSBM中，当访问超过4个列时，vertical partitioning的IO开销就和行存储一样了，此外join cost也非常高。
+
+> 其次，要想获得查询性能量的提升，我们必须同时使用column storage和column query execution。compression和late materilization对性能提高最大， late materialization可以平均提高查询性能3倍左右。compression平均提高查询性能2倍，如果column是sort的，那么性能可以提升一个量级，比如SSBM基准测试中的flight1查询。
+
+
+
 如何设计一个列存储数据库系统呢，毫无疑问，最快速，最简单，成本最小的方式就是充分利用现有的行数据库系统，例如，我们可以在postgresql中模拟列存储，最直观的模拟方式就是，将表垂直切分为多个column，每一个column存储为一个物理表，这样当查询column a和column b时，可以只去column a和columnb对应的物理表中查询数据，而不用查询所有列。这种方式最大的有点就是可以充分利用postgresql中所有的组件：storage manager，query execution，query optimizer等等。我们几乎不用编写什么新的代码就能利用列存储的优势：只从磁盘查询所需的列。**事实上，早期就有人这么做过，并且查询性能还行：只有查询非常少数的几个列时，vertical partitioning才比行存储性能好。**
 
 vertical partitioning可以认为是伪列存储。那么真正意义的列存储是什么样的呢？从目前的观点来看，现代真正意义上的列存储必须包含两个部分：
