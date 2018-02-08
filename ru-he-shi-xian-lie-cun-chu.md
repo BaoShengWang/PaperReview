@@ -4,9 +4,11 @@
 
 本论文主要结论概况如下：
 
-> 首先，尽管我们可以在行存储中通过vertical partitioning ，index only技术模拟列存储，但是这种模拟不会带来很好的性能提升，原因是tuple overhead开销太的了，在SSBM中，当访问超过4个列时，vertical partitioning的IO开销就和行存储一样了，此外join cost也非常高。
+* 首先，尽管我们可以在行存储中通过vertical partitioning ，index only技术模拟列存储，但是这种模拟不会带来很好的性能提升，原因是tuple overhead开销太的了，在SSBM中，当访问超过4个列时，vertical partitioning的IO开销就和行存储一样了，此外join cost也非常高。
+* 其次，观察Figure7\(a\)可以看到，要想获得查询性能量的提升，我们必须同时使用column storage和column query execution。compression和late materilization对性能提高最大，late materialization可以平均提高查询性能3倍左右。compression平均提高查询性能2倍，如果column是sort的，那么性能可以提升一个量级，比如SSBM基准测试中的flight1查询.
+* 此外， 单纯的使用block-processin而没有开启compression，对查询性能的提升并不明显，  block-processing大概提升查询性能5-50%左右,具体提升多少，取决于我们是否使用了compression，   如果没有使用compression，那么block所节省的cpu好处并不明显。  invisible join可以提高性能50-70%，因为Cstore使用late-materialized join技术
 
-> 其次，要想获得查询性能量的提升，我们必须同时使用column storage和column query execution。compression和late materilization对性能提高最大， late materialization可以平均提高查询性能3倍左右。compression平均提高查询性能2倍，如果column是sort的，那么性能可以提升一个量级，比如SSBM基准测试中的flight1查询。
+![](/assets/row vs column-performance in c-store.png)
 
 
 
