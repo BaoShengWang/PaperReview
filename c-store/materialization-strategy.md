@@ -24,9 +24,11 @@ _**pipeline和paralle之间的主要矛盾是position reaccess，pipeline存在p
 
 ## 1 late materialization的实现
 
+我们以 SELECT SHIPDATE, LINENUM FROM LINEITEM WHERE SHIPDATE为例。
+
+
+
 我们先来看看EM实现。如图figure 6\(a\)，描述了EM-pipelined的执行流程。首先使用DS2\(CASE 2\)扫描shipdate列，生成满足shipdate &lt; X 的&lt;pos,val1&gt;流，然后传递给DS4,DS4遍历linenum列中pos对应的value，然后生成满足linenum &lt; Y  的&lt;shipdate,linenum&gt;。
-
-
 
 figure 6\(b\)描述了EM-paralle执行流程，首先SPC操作扫描shipdate和linenum列生成&lt;shipdate,linenum&gt;，然后生成满足shipdate&lt; X，linenum &lt;Y的元祖。
 
@@ -83,7 +85,7 @@ CASE 1,CAST 3，AND,MERGE 用于Late Materialization.CASE 2，CASE 4,SPC用于Ea
 
 ** 2.AND**
 
-ANDoperator对多个position list取交集,用在LM中。**          
+ANDoperator对多个position list取交集,用在LM中。**            
 **
 
 **3.MERGE and SPC**
