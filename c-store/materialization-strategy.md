@@ -1,22 +1,26 @@
+作者：王宝生
+
+邮箱：franciswbs@163.com
+
+github:https://github.com/BaoShengWang
+
+![](/assets/微信.jpg)
+
+
+
+
+
 paper中介绍了4中物化策略：EM-pipelined,EM-paralle,LM-pipelined,LM-paralle.
 
 EM，即early materialization，尽可能早的提前进行tuple reconstruction，早期的列数据库使用的就是这种方式。
 
 LM，late materialization，尽可能晚的tuple reconstruction，使得数据能够尽可能的以列方式存在内存中，从而可以应用operate directly on compression data技术，减少cpu cost。
 
-
-
 _**从paper中可以看到\(figure 10 \(b\)\)，EM和LM之间的主要矛盾是operate directly on compression，也就是说，EM和LM之间的性能差异主要取决于是否是compression，如果column是compression的，那么LM要优于EM，因为此时LM可以使用operate directly on compression技术，避decompression cost，尤其是数据量非常大时，效果更明显。**_
-
-
 
 所谓的pipelined，就是一个Datasource的输出Datasource之间顺序执行，例如，CASE 1的输出是CASE 3的输入\(CAST 1-&gt;position list-&gt;CASE 3-&gt;&lt;value&gt;\),CASE 2的输出是CASE 4的输入\(CASE 2-&gt;&lt;position,value&gt;-&gt;CASE 4-&gt;&lt;value1,value2...&gt;\),可以发现不管哪一种方式，后面的Datasource都存储reaccess开销，也就说后面的Datasource都要根据position来获取value，如果predicate生成的数据非常非常多，那么这个reaccess开销非常大。
 
-
-
 而paralle方式，也就是说多个datasoruce可以同时执行。例如在EM-paralle中，使用SPC operator在执行之前就将多个column拼接出tuple，在LM-paralle中，使用AND operator对多个column position进行and操作，最后使用merge生成tuple。
-
-
 
 _**pipeline和paralle之间的主要矛盾是position reaccess，pipeline存在position reaccess cost，当selectivity非常大时，此开销将非常高**_。
 
@@ -44,6 +48,8 @@ _**pipeline和paralle之间的主要矛盾是position reaccess，pipeline存在p
 2. 如果selectivity非常少时，那么使用pipelined。
 3. 如果输出是aggreagate，那么使用LM
 
+---
+
 # 2 late materialization的实现
 
 我们需要实现下面几个base operator：datasource，and，merge,spc。
@@ -60,7 +66,7 @@ CASE 1,CAST 3，AND,MERGE 用于Late Materialization.CASE 2，CASE 4,SPC用于Ea
 
 ** 2.AND**
 
-ANDoperator对多个position list取交集,用在LM中。**    
+ANDoperator对多个position list取交集,用在LM中。**      
 **
 
 **3.MERGE and SPC**
@@ -94,25 +100,31 @@ Early Materialization 相对简单些，其思想要么是在第一步就将所�
 
 > pipeline vs paralle
 >
-> \_\*\*pipeline的问题是存在position reaccess cost，因此当selectivity比较小时，可以采用pipeline方式。
+> _**pipeline的问题是存在position reaccess cost，因此当selectivity比较小时，可以采用pipeline方式。**_
 >
 > ---
 >
-> 所谓的pipelined，就是一个Datasource的输出Datasource之间顺序执行，例如，CASE 1的输出是CASE 3的输入\(CAST 1-&gt;position list-&gt;CASE 3-&gt;&lt;value&gt;\),  
-> CASE 2的输出是CASE 4的输入\(CASE 2-&gt;&lt;position,value&gt;-&gt;CASE 4-&gt;&lt;value1,value2...&gt;\),可以发现不管哪一种方式，后面的Datasource都存储reaccess开销，  
-> 也就说后面的Datasource都要根据position来获取value，如果predicate生成的数据非常非常多，那么这个reaccess开销非常大。
+> 所谓的pipelined，就是一个Datasource的输出Datasource之间顺序执行，例如，CASE 1的输出是CASE 3的输入\(CAST 1-&gt;position list-&gt;CASE 3-&gt;&lt;value&gt;\),CASE 2的输出是CASE 4的输入\(CASE 2-&gt;&lt;position,value&gt;-&gt;CASE 4-&gt;&lt;value1,value2...&gt;\),可以发现不管哪一种方式，后面的Datasource都存储reaccess开销，也就说后面的Datasource都要根据position来获取value，如果predicate生成的数据非常非常多，那么这个reaccess开销非常大。
 >
-> 而paralle方式，也就是说多个datasoruce可以同时执行。例如在EM-paralle中，使用SPC operator在执行之前就将多个column拼接出tuple，  
-> 在LM-paralle中，使用AND operator对多个column position进行and操作，最后使用merge生成tuple。EM-paralle和LM-paralle的区别是LM-paralle中，谓词可以下推到datasource，例如CASE 1.而在EM-paralle，此外因为数据是以  
-> column方式存在于内存中的，因此可以使用operate directly on compression data等技术，谓词不能下推到Datasource。
+>
+>
+> 而paralle方式，也就是说多个datasoruce可以同时执行。例如在EM-paralle中，使用SPC operator在执行之前就将多个column拼接出tuple，在LM-paralle中，使用AND operator对多个column position进行and操作，最后使用merge生成tuple。EM-paralle和LM-paralle的区别是LM-paralle中，谓词可以下推到datasource，例如CASE 1.而在EM-paralle，此外因为数据是以column方式存在于内存中的，因此可以使用operate directly on compression data等技术，谓词不能下推到Datasource。
+
+
+
+---
 
 # 3 Experiments
 
-query 1
+> query 1
+>
+> SELECT SHIPDATE, LINENUM
+>
+> FROM LINEITEM
+>
+> WHERE SHIPDATE &lt; X AND LINENUM &lt; Y
 
-SELECT SHIPDATE, LINENUM FROM LINEITEM
 
-WHERE SHIPDATE &lt; X AND LINENUM &lt; Y
 
 其中sort key是\(returnflag,shipdate,linenum\),其中returnflag，shipdate采用RLE编码，linenum没有采用任何压缩。
 
