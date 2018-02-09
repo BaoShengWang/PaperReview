@@ -26,11 +26,9 @@ _**pipeline和paralle之间的主要矛盾是position reaccess，pipeline存在p
 
 我们以 SELECT SHIPDATE, LINENUM FROM LINEITEM WHERE SHIPDATE为例。
 
+我们先来看看EM实现。如图figure 6\(a\)，描述了EM-pipelined的执行流程。首先使用DS2\(CASE 2\)扫描shipdate列，生成满足shipdate &lt; X 的&lt;pos,val1&gt;流，然后传递给DS4,DS4遍历linenum列中pos对应的value，然后生成满足linenum &lt; Y  的&lt;shipdate,linenum&gt;。figure 6\(b\)描述了EM-paralle执行流程，首先SPC操作扫描shipdate和linenum列生成&lt;shipdate,linenum&gt;，然后生成满足shipdate&lt; X，linenum &lt;Y的元祖。
 
 
-我们先来看看EM实现。如图figure 6\(a\)，描述了EM-pipelined的执行流程。首先使用DS2\(CASE 2\)扫描shipdate列，生成满足shipdate &lt; X 的&lt;pos,val1&gt;流，然后传递给DS4,DS4遍历linenum列中pos对应的value，然后生成满足linenum &lt; Y  的&lt;shipdate,linenum&gt;。
-
-figure 6\(b\)描述了EM-paralle执行流程，首先SPC操作扫描shipdate和linenum列生成&lt;shipdate,linenum&gt;，然后生成满足shipdate&lt; X，linenum &lt;Y的元祖。
 
 概括起来，EM执行流程如下：
 
@@ -45,6 +43,8 @@ Early Materialization 相对简单些，其思想要么是在第一步就将所�
 或者，直接使用SPC生成满足predicate a和predicate b的&lt;value a,value b&gt;。
 
 ![](/assets/物化策略-EM.png)
+
+
 
 figure 7描述了LM执行流程。概括起来LM执行流程如下：
 
@@ -85,7 +85,7 @@ CASE 1,CAST 3，AND,MERGE 用于Late Materialization.CASE 2，CASE 4,SPC用于Ea
 
 ** 2.AND**
 
-ANDoperator对多个position list取交集,用在LM中。**            
+ANDoperator对多个position list取交集,用在LM中。**              
 **
 
 **3.MERGE and SPC**
