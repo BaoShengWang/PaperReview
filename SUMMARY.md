@@ -11,4 +11,5 @@
 * [c-store文献汇总](c-store/c-store.md)
 * [c-store概述](c-store/c-storegai-shu.md)
 * [how to design column database](ru-he-shi-xian-lie-cun-chu.md)
+* [Materialization Strategy](c-store/materialization-strategy.md)
 
