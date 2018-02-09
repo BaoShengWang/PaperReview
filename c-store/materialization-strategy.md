@@ -6,7 +6,27 @@ github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
 
 ![](/assets/微信.jpg)
 
+延迟物化是c-store查询执行引擎中极其核心的技术，平均可以提高查询性能3倍。在下面的几个paper中有详细的介绍：
+
+> 2007 Materialization Strategies in a Column-Oriented DBMS. MIT CSAIL Technical Report. MIT-CSAIL-TR-2006-078
+>
+> 2008 Materialization Strategies in a Column-Oriented DBMS, Abadi, Myers, DeWitt,and Madden. ICDE
+>
+> 2013 The Design and Implementation of Modern Column-Oriented Database Systems
+
+
+
+现在对他们总一个整理，方便以后学习。
+
+
+
+paper中还对pipeline中的position reaccess的优化做了介绍，使用的思想是PAX，这里不做介绍。
+
+
+
 paper中介绍了4中物化策略：EM-pipelined,EM-paralle,LM-pipelined,LM-paralle.
+
+
 
 EM，即early materialization，尽可能早的提前进行tuple reconstruction，早期的列数据库使用的就是这种方式。
 
@@ -28,8 +48,6 @@ _**pipeline和paralle之间的主要矛盾是position reaccess，pipeline存在p
 
 我们先来看看EM实现。如图figure 6\(a\)，描述了EM-pipelined的执行流程。首先使用DS2\(CASE 2\)扫描shipdate列，生成满足shipdate &lt; X 的&lt;pos,val1&gt;流，然后传递给DS4,DS4遍历linenum列中pos对应的value，然后生成满足linenum &lt; Y  的&lt;shipdate,linenum&gt;。figure 6\(b\)描述了EM-paralle执行流程，首先SPC操作扫描shipdate和linenum列生成&lt;shipdate,linenum&gt;，然后生成满足shipdate&lt; X，linenum &lt;Y的元祖。
 
-
-
 概括起来，EM执行流程如下：
 
 **Early Materialization**
@@ -43,8 +61,6 @@ Early Materialization 相对简单些，其思想要么是在第一步就将所�
 或者，直接使用SPC生成满足predicate a和predicate b的&lt;value a,value b&gt;。
 
 ![](/assets/物化策略-EM.png)
-
-
 
 figure 7描述了LM执行流程。概括起来LM执行流程如下：
 
@@ -85,7 +101,7 @@ CASE 1,CAST 3，AND,MERGE 用于Late Materialization.CASE 2，CASE 4,SPC用于Ea
 
 ** 2.AND**
 
-ANDoperator对多个position list取交集,用在LM中。**              
+ANDoperator对多个position list取交集,用在LM中。**                
 **
 
 **3.MERGE and SPC**
