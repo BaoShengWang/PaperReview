@@ -1,6 +1,14 @@
 # Performance Tradeoffs in Read-Optimized Databases {#performance-tradeoffs-in-read-optimized-databases}
 
-![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/%E5%88%97%E5%AD%98%E5%82%A8%E8%A1%8C%E5%AD%98%E5%82%A8%E6%80%A7%E8%83%BD%E5%B9%B3%E8%A1%A1.png)
+作者：王宝生
+
+邮箱：franciswbs@163.com
+
+github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
+
+![](/assets/微信.jpg)
+
+![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/列存储行存储性能平衡.png)
 
 Performance Tradeoffs in Read-Optimized Databases\(2006年\)是列存储领域非常经典的一篇论文。
 
@@ -12,7 +20,7 @@ Performance Tradeoffs in Read-Optimized Databases\(2006年\)是列存储领域�
 
 ## 1.1 测试基准表 {#11-测试基准表}
 
-![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/%E8%A1%8C%E5%AD%98%E5%82%A8%E5%88%97%E5%AD%98%E5%82%A8%E6%B5%8B%E8%AF%95%E5%9F%BA%E5%87%86%E8%A1%A8.png)
+![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/行存储列存储测试基准表.png)
 
 lineitem表含有16个属性，每一行元祖大小是150字节，整个表大小为9.5G。可以看出，数据量是蛮大的。
 
@@ -36,7 +44,7 @@ RAID with 3 SATA disk,180MB/sec bandwidth,60MB/sec per disk。
 
 ## 1.3 扫描器 {#13-扫描器}
 
-![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/%E8%A1%8C%E5%88%97%E5%AD%98%E5%82%A8-%E6%89%AB%E6%8F%8F%E5%99%A8.png)
+![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/行列存储-扫描器.png)
 
 这里要注意的是，在列存储扫描器中，列存储扫描器采用流水线方式顺序执行node scan。每一个node scan生成一组满足用户查询条件的元祖&lt;position,value&gt;,图中的poslist1+col1，然后传递到下一个node scan，来获取position 对应的值，并应用谓词条件，图中的poslist+col1+col2。
 
@@ -67,7 +75,7 @@ RAID with 3 SATA disk,180MB/sec bandwidth,60MB/sec per disk。
 
 性能如图6：
 
-![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20180128150214.png)
+![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/微信图片_20180128150214.png)
 
 ### IO开销 {#io开销}
 
@@ -92,7 +100,7 @@ RAID with 3 SATA disk,180MB/sec bandwidth,60MB/sec per disk。
 
 cpu性能测试如图7所示：
 
-![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/%E9%80%89%E6%8B%A9%E7%8E%87%E4%BD%8E%E7%9A%84%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95%E8%A1%A8.png)
+![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/选择率低的性能测试表.png)
 
 降低selectivety对IO时间没有影响。影响最大的是cpu时间。
 
@@ -118,7 +126,7 @@ IO时间趋势和用例1一致。不同的是cpu时间。首先内存延时开�
 
 # 总结 {#总结}
 
-![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/%E8%A1%8C%E5%AD%98%E5%82%A8%E5%92%8C%E5%88%97%E5%AD%98%E5%82%A8%E4%B9%8B%E5%8A%A0%E9%80%9F%E6%AF%94.png)
+![](https://baoshengwang.gitbooks.io/columnar-database/content/assets/行存储和列存储之加速比.png)
 
 作者使用speed up来衡量列存储和行存储的相对性能加速比，如图2所示。其中x轴表示的是元祖的宽度。y中表示的是cpdb.
 
@@ -135,6 +143,4 @@ DiskBW表示是磁盘带宽，磁盘每秒传输的字节数。
 在本paper中，$$clock=3.2GHZ=3.2_1000MHZ=3.2_1000_1000KHZ=3.2_1000_1000_1000HZ，DiskBW=180MB/S=188743680B$$
 
 $$cpdb=3.2_1000_1000\*1000/188743680=17$$
-
-
 

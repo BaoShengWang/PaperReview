@@ -1,6 +1,14 @@
 # Data Compression in Database Query Processing
 
-![](/assets/列存储压缩算法介绍.png)
+作者：王宝生
+
+邮箱：franciswbs@163.com
+
+github:https://github.com/BaoShengWang
+
+![](/assets/微信.jpg)
+
+
 
 # 1 Leight-Weight Compression
 
