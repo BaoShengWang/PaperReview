@@ -14,19 +14,11 @@ github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
 >
 > 2013 The Design and Implementation of Modern Column-Oriented Database Systems
 
-
-
 现在对他们总一个整理，方便以后学习。
-
-
 
 paper中还对pipeline中的position reaccess的优化做了介绍，使用的思想是PAX，这里不做介绍。
 
-
-
 paper中介绍了4中物化策略：EM-pipelined,EM-paralle,LM-pipelined,LM-paralle.
-
-
 
 EM，即early materialization，尽可能早的提前进行tuple reconstruction，早期的列数据库使用的就是这种方式。
 
@@ -78,15 +70,19 @@ late materialization 逻辑执行顺序大致为：CASE 1-&gt;AND-&gt;CASE 3-&gt
 
 ![](/assets/物化策略-LM.png)
 
-> pipeline vs paralle
->
+
+
+**pipeline vs paralle **
+
+
+
 > _**pipeline的问题是存在position reaccess cost，因此当selectivity比较小时，可以采用pipeline方式。**_
 >
 > 所谓的pipelined，就是一个Datasource的输出Datasource之间顺序执行，例如，CASE 1的输出是CASE 3的输入\(CAST 1-&gt;position list-&gt;CASE 3-&gt;&lt;value&gt;\),CASE 2的输出是CASE 4的输入\(CASE 2-&gt;&lt;position,value&gt;-&gt;CASE 4-&gt;&lt;value1,value2...&gt;\),可以发现不管哪一种方式，后面的Datasource都存储reaccess开销，也就说后面的Datasource都要根据position来获取value，如果predicate生成的数据非常非常多，那么这个reaccess开销非常大。
 >
 > 而paralle方式，也就是说多个datasoruce可以同时执行。例如在EM-paralle中，使用SPC operator在执行之前就将多个column拼接出tuple，在LM-paralle中，使用AND operator对多个column position进行and操作，最后使用merge生成tuple。EM-paralle和LM-paralle的区别是LM-paralle中，谓词可以下推到datasource，例如CASE 1.而在EM-paralle，此外因为数据是以column方式存在于内存中的，因此可以使用operate directly on compression data等技术，谓词不能下推到Datasource。
 
----
+
 
 下面介绍几个base operator：datasource，and，merge,spc。
 
@@ -101,7 +97,7 @@ CASE 1,CAST 3，AND,MERGE 用于Late Materialization.CASE 2，CASE 4,SPC用于Ea
 
 ** 2.AND**
 
-ANDoperator对多个position list取交集,用在LM中。**                
+ANDoperator对多个position list取交集,用在LM中。**                  
 **
 
 **3.MERGE and SPC**
