@@ -9,7 +9,7 @@
 
 ## C-Store
 
-* [c-store概述](c-store/c-storegai-shu.md)
+* [operate directly on compression data](c-store/c-storegai-shu.md)
 * [Materialization Strategy](c-store/materialization-strategy.md)
 
 ## MPP-Database
