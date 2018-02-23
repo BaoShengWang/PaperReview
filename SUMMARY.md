@@ -12,3 +12,7 @@
 * [how to design column database](ru-he-shi-xian-lie-cun-chu.md)
 * [Materialization Strategy](c-store/materialization-strategy.md)
 
+## mpp-database
+
+* [aggregate-join-query-processing-in-parallel-database-systems](mpp-database/aggregate-join-query-processing-in-parallel-database-systems.md)
+
