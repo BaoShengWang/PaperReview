@@ -1,3 +1,13 @@
+author：王宝生
+
+e-mail：franciswbs@163.com
+
+github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
+
+
+
+# ![](/assets/profile.png) {#1-sql-on-hadoop-分类}
+
 # 1. SQL On Hadoop 分类 {#1-sql-on-hadoop-分类}
 
 1.1 查询延时分类
@@ -148,7 +158,6 @@ SQL On Hadoop 中也存在表分区的概念，一个表分区存储在一个 HD
 
 ```
 CREATE TABLE test_table(id string,name int) PARTITION BY(ds string)。
-
 ```
 
 当向 test\_table 中插入如下元组时：
@@ -156,7 +165,6 @@ CREATE TABLE test_table(id string,name int) PARTITION BY(ds string)。
 ```
 (id=‘10010’，name=‘sql on hadoop’,ds=‘2017-05-31’)
 (id=‘10010’，name=‘sql on hadoop’,ds=‘2017-05-32’)
-
 ```
 
 HDFS 中将创建如下目录:
@@ -164,7 +172,6 @@ HDFS 中将创建如下目录:
 ```
 /user/hive/warehouse/test_table/ds=2017-05-31
 /user/hive/warehouse/test_table/ds=2017-05-32
-
 ```
 
 当执行 SELECT \* FROM test\_table WHERE ds=’2017-05-31’时，只需要扫描 ds=2017-05-31目录即可，这样可以跳过大量无关数据的扫描，从而加快数据查询速度。
@@ -217,7 +224,6 @@ tuples.length;i++){
   }
   result// 返回结果
 }
-
 ```
 
 Block-oriented processing 模型的优点是一次 next 返回多个元组，减少了解释开销，同时也被证明增加了 CPU Cache 的命中率，当 CPU 访问元组中的某个列时会将该元组加载到 CPU Cache\(如果该元组大小小于 CPU Cache 缓存行的大小\), 访问后继的列将直接从 CPU Cache 中获取，从而具有较高的 CPU Cache 命中率，然而如果之访问一个列或者少数几个列时 CPU 命中率仍然不理想。该模型最大的一个缺点是不能充分利用现代编译器技术，比如在上面的循环中，很难使用 SIMD 指令处理数据。
@@ -245,7 +251,6 @@ tuples.length;i++){
   }
   retult
 }
-
 ```
 
 近几年，一些 SQL On Hadoop 系统引入了向量化执行引擎，比如 Hive，Impala，Presto，Spark 等，尽管其实现细节不同，但核心思想是一致的：尽可能的在一次 next 方法调用返回多条数据，然后使用动态代码生成技术来优化循环，表达式计算从而减少解释开销，提高 CPU Cache 命中率，减少分支预测。
