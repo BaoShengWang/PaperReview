@@ -1,8 +1,8 @@
 # Performance Tradeoffs in Read-Optimized Databases {#performance-tradeoffs-in-read-optimized-databases}
 
-作者：王宝生
+author：王宝生
 
-邮箱：franciswbs@163.com
+e-mail：franciswbs@163.com
 
 github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
 

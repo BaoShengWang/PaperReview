@@ -1,14 +1,12 @@
 # Paper Review
 
-作者：王宝生
+author：王宝生
 
-邮箱：franciswbs@163.com
+e-mail：franciswbs@163.com
 
 github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
 
 ![](/assets/微信.jpg)
-
-
 
 1985 A decomposition storage model” Copeland and Khoshafian
 

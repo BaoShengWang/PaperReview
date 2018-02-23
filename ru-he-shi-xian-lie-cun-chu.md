@@ -1,14 +1,12 @@
 # 如何设计一个列存储数据库
 
-作者：王宝生
+author：王宝生
 
-邮箱：franciswbs@163.com
+e-mail：franciswbs@163.com
 
-github:https://github.com/BaoShengWang
+github:[https://github.com/BaoShengWang](https://github.com/BaoShengWang)
 
 ![](/assets/微信.jpg)
-
-
 
 本文内容主要摘自 Column-Stores vs. Row-Stores: How Different Are They Really?
 
