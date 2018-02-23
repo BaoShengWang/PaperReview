@@ -16,3 +16,5 @@
 
 * [aggregate-join-query-processing-in-parallel-database-systems](mpp-database/aggregate-join-query-processing-in-parallel-database-systems.md)
 
+## HTAP
+
