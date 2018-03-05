@@ -2,7 +2,9 @@
 
 ## 1.1 expression tree
 
-expression tree由UnaryExpression，BinaryExpression，LeafExpression组成。其中UnaryExpression和BinaryExpressions属于内部节点，LeafExpression属于叶子节点。叶子节点的种类不多，有Literal，和Attribute。
+expression tree由UnaryExpression，BinaryExpression，LeafExpression组成。  
+其中UnaryExpression和BinaryExpressions属于内部节点，LeafExpression属于叶子节点。  
+叶子节点的种类不多，主要有Literal，和Attribute，BoundReference。其中Literal是常量，Attribute是属性，BoundReference将表达式绑定到tuple中的某一个属性并进行求值。
 
 BinaryOperator和BInaryExpression的区别是：第一个区别是，BinaryOperator是中缀表达式,a SYMBOL b,例如a+b,a&gt;b。
 
@@ -12,25 +14,20 @@ BinaryOperator和BInaryExpression的区别是：第一个区别是，BinaryOpera
 
 expression tree层级如下：
 
+```
 +-- Expression
+  +-- UnaryExpression,一元表达式
+  +-- BinaryExpression，二元表达
+    +-- BinaryOperator，二元操作符
+  +-- TernaryExpression，三元表达式
+  +-- LeafExpression，叶子表达式
+```
 
-      +-- UnaryExpression,一元表达式
 
-      +-- BinaryExpression，二元表达式
-
-           +-- BinaryOperator，二元操作符
-
-      +-- TernaryExpression，三元表达式
-
-      +-- LeafExpression，叶子表达式
-
-   
 
 给定一个表达式，求值过程是递归求值的。对于大多数表达式而言，如果输入是null，那么输出也是null.
 
 例如SparkSql中的BinaryExpression的eval如下：
-
-
 
 ```
   override def eval(input: InternalRow): Any = {
@@ -46,12 +43,7 @@ expression tree层级如下：
       }
     }
   }
-
 ```
-
-
-
- 
 
 只有极个别的表达式不是这样，例如三值逻辑表达式，例如EqualNullSafe
 
@@ -66,49 +58,38 @@ expression tree层级如下：
   }
 ```
 
-
-
 ### 1.1.1 Literal,属于LeafExpression
-
-
 
 ### 1.1.2 算术表达式
 
-算术表达式主要主要执行正/负，加减乘除求模等算术运算，主要有一元算术表达式和二元算术表达式。二元算术表达式和普通的二元表达式的区别是，二元算术表达式的两个输入操作数的数据类型是相同的。
-
-
+算术表达式主要主要执行正/负，加减乘除求模等算术运算，主要有一元算术表达式和二元算术表达式。  
+二元算术表达式和普通的二元表达式的区别是，二元算术表达式的两个输入操作数的数据类型是相同的。
 
 算术表达式层级如下：
 
+ 
+
+```
 +-- UnaryExpression
-
-      +-- UnaryMinus\(-1\)
-
-      +-- UnaryPositive\(+1\)
-
-      +-- Abs
-
+  +-- UnaryMinus(-1)
+  +-- UnaryPositive(+1)
+  +-- Abs
 +-- BinaryArithmetric
-
-      +-- Add\(1+2\)
-
-      +-- Subtract\(1-2\)
-
-      +-- Miltiply\(1\*2\)
-
-      +-- Divide\(1/2\)
-
-      +-- Remainder\(%\)
-
-
+  +-- Add(1+2)
+  +-- Subtract(1-2)
+  +-- Miltiply(1*2)
+  +-- Divide(1/2)
+  +-- Remainder(%)
+```
 
 ### 1.1.3 谓词表达式
 
 谓词表达式的计算结果是bool，尤其需要注意的是，谓词表达式是三值逻辑的。其真值表如下所示：
 
- ![](/assets/expression-predicate-equal-true-table.png)![](/assets/expression-predicate-logical-true-table.png)
+![](/assets/expression-predicate-equal-true-table.png)![](/assets/expression-predicate-logical-true-table.png)
 
-* Not  ，三值逻辑
+* Not  
+  ，三值逻辑
 
 * And
 
@@ -132,7 +113,7 @@ expression tree层级如下：
   }
 ```
 
-*  Or,三值逻辑
+* Or,三值逻辑
 
 ```
 override def eval(input: InternalRow): Any = {
@@ -171,34 +152,24 @@ override def eval(input: InternalRow): Any = {
     }
 ```
 
-
-
 * LessThan\(a&lt;b\)
 * LessThanOrEqual\(a&lt;=b\)
 * GreaterThan\(a&gt;b\)
 * GreaterThanOrEqual\(a&gt;=b\)
 
-
-
 ### 1.1.4 数学表达式
 
+```
 +-- LeafMathExpression
-
-    +-- E
-
-    +-- Pi
-
+  +-- E
+  +-- Pi
 +-- UnaryMathExpression
-
-    +-- Log
-
-    +-- Sin
-
-    +-- ...
-
+  +-- Log
+  +-- Sin
+  +-- ...
 +-- BinaryMathExpression
-
-    +-- Pow
+  +-- Pow
+```
 
 ### 1.1.5 条件表达式
 
@@ -208,31 +179,31 @@ override def eval(input: InternalRow): Any = {
 
 ### 1.1.8 命名表达式和属性绑定
 
- Attribute
+在analysis阶段，会将UnResolvedAttributeReference替换为AttributeReference。在物理计划的实际运行阶段，会将AttributeReference替换为BoundAttribute，这个过程叫做表达式绑定。
 
- Alias
 
- AttibuteReference
 
- BoundAttribute
+```
++-- LeafExpression
+  +-- NameExpression
+    +-- Attribute
+      +-- AttibuteReference
+    +-- Alias
+  +-- BoundAttribute，获取tuple中指定属性的值。
+  
+```
 
 ### 1.1.9 聚合表达式
 
-
-
 ### 1.1.10 子查询
 
- SubQueryExpresion
-
-
+SubQueryExpresion
 
 ## 1.2 重要属性
 
 ### 1.2.1 reference
 
- expression中的free variable.例如x+2+3+y,中的free  variable是x和y。这些free variable在进行实际求值之前，需要绑定到tuple中对应的属性。
-
-这个属性非常重要。
+expression中的free variable.例如x+2+3+y,中的free  variable是x和y。这些free variable在进行实际求值之前，需要绑定到tuple中对应的属性。这个属性非常重要。
 
 ### 1.2.2 foldable
 
@@ -244,11 +215,11 @@ expression的结果是否为null。
 
 ### 1.2.4 deterministic
 
-同一个输入，多次求值结果是否相同。
+同一个输入，多次求值结果是否相同。
 
 ## 1.3 表达式求值
 
- eval\(tuple\)
+eval\(tuple\)
 
 ## 1.4 optimization
 
@@ -261,8 +232,6 @@ expression的结果是否为null。
 3.简化bool表达式
 
 简化：a AND true =&gt; a，a AND false=&gt;false。。。。
-
-
 
 消除not：!\(a&gt;b\)=&gt;a&lt;=b
 
@@ -280,9 +249,7 @@ expression的结果是否为null。
 
 ### 1.5.2 split condition to DNF
 
-### 1.5.3 subsetof 
+### 1.5.3 subsetof
 
 
-
-  
 
