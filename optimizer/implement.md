@@ -10,8 +10,6 @@ BinaryOperator和BInaryExpression的区别是：第一个区别是，BinaryOpera
 
 第二个区别是，BinaryOperator的两个输入操作数的数据类型必须相同，在进行求值之前，会对输入数据类型进行检查，如果数据类型不相同 ，会抛出一个异常。
 
-
-
 expression tree层级如下：
 
 ```
@@ -21,9 +19,8 @@ expression tree层级如下：
     +-- BinaryOperator，二元操作符
   +-- TernaryExpression，三元表达式
   +-- LeafExpression，叶子表达式
+  +-- other...其他类型的表达式.
 ```
-
-
 
 给定一个表达式，求值过程是递归求值的。对于大多数表达式而言，如果输入是null，那么输出也是null.
 
@@ -58,7 +55,9 @@ expression tree层级如下：
   }
 ```
 
-### 1.1.1 Literal,属于LeafExpression
+### 1.1.1 Literal
+
+常量，是foldable的，属于LeafExpression
 
 ### 1.1.2 算术表达式
 
@@ -66,8 +65,6 @@ expression tree层级如下：
 二元算术表达式和普通的二元表达式的区别是，二元算术表达式的两个输入操作数的数据类型是相同的。
 
 算术表达式层级如下：
-
- 
 
 ```
 +-- UnaryExpression
@@ -82,14 +79,22 @@ expression tree层级如下：
   +-- Remainder(%)
 ```
 
+
+
+Add,Miltiply满足交换律和结合律，对于这样的运算，可以执行一种叫做ReorderAssociativeOperator的优化，该优化尝试将Add或者Multily的所有子节点flatten，然后执行const folading。例如，x+1+2+y+7会被flatten成\[1,2,7\],\[x,y\],然后将\[1,2\]替换为10，
+
+
+
 ### 1.1.3 谓词表达式
 
-谓词表达式的计算结果是bool，尤其需要注意的是，谓词表达式是三值逻辑的。其真值表如下所示：
+谓词表达式的计算结果是bool。在谓词表达式中，有二值逻辑和三值逻辑两种。其中二值逻辑的真值表只有两个结果：true和false。而三值逻辑的计算结果有三个结果：true，false，null。
+
+在spark sql中，谓词表达式是三值逻辑的，其真值表如下图所示：
 
 ![](/assets/expression-predicate-equal-true-table.png)![](/assets/expression-predicate-logical-true-table.png)
 
 * Not  
-  ，三值逻辑
+  三值逻辑
 
 * And
 
@@ -175,13 +180,46 @@ override def eval(input: InternalRow): Any = {
 
 ### 1.1.6 类型转换
 
+  SELECT CAST\( a AS INT\) ，Cast Expression对应于SQL中CAST表达式，用于类型转换。
+
+```
++-- UnaryExpression
+  +-- Cast(child:Expression)
+```
+
 ### 1.1.7 日期表达式和字符串表达式
+
+
+
+字符串表达式
+
+```
++-- BinaryExpression
+   +-- StringPredicate
+     +-- Contains(left:Expression,right:Expression) left.contains(right)
+     +-- StartsWith(left:Expression,right:Expression) left.startWith(right)
+     +-- EndWith(left:Expression,right:Expression) left.endWith(right)
+	 
++-- UnaryExpression
+  +-- Upper(child:Expression)
+  +-- Lower(child:Expression)，将child转换为小写
+  +-- Length(child:Expression),获取child长度。
+  +-- StringReverse(child:Expression)，字符串反转
+  
++-- TernaryExpression
+  +-- Substring(str,pos,len)，相当于 str.subString(pos,len)
+
++-- Expression 
+  +-- Concat(children:Seq[Expression])
+  +-- ConcatWith(children:Seq[Expression])
+  +-- FormatString,格式化字符串
+```
+
+还有很多其他字符串函数，可以参考String类中的函数。
 
 ### 1.1.8 命名表达式和属性绑定
 
 在analysis阶段，会将UnResolvedAttributeReference替换为AttributeReference。在物理计划的实际运行阶段，会将AttributeReference替换为BoundAttribute，这个过程叫做表达式绑定。
-
-
 
 ```
 +-- LeafExpression
@@ -190,7 +228,6 @@ override def eval(input: InternalRow): Any = {
       +-- AttibuteReference
     +-- Alias
   +-- BoundAttribute，获取tuple中指定属性的值。
-  
 ```
 
 ### 1.1.9 聚合表达式
@@ -223,25 +260,27 @@ eval\(tuple\)
 
 ## 1.4 optimization
 
-1.常量折叠.\(\(2+x\)+1\)+\(y+\(1+2\)\) =&gt;\(\(2+x\)+1\)+\(y+3\)，对1+2执行常量折叠。需要注意的是，\(2+x\)+1这个表达式不可折叠，因为x+2不是可折叠的。
+表达式树优化
 
-2.对具有结合律的运算执行常量折叠：例如
+### 1.4.1 常量折叠（ConstantFolding）
+
+\(\(2+x\)+1\)+\(y+\(1+2\)\) =&gt;\(\(2+x\)+1\)+\(y+3\)，对1+2执行常量折叠。需要注意的是，\(2+x\)+1这个表达式不可折叠，因为x+2不是可折叠的。
+
+### 1.4.2 对具有结合律的运算执行常量折叠\(ReorderAssociativeOperator\)
 
 \(\(2+x\)+1\)+\(y+\(1+2\)\) =&gt;2+1+1+2+\(x+y\)=&gt;6+x+y
 
-3.简化bool表达式
+### 1.4.3 简化bool表达式\(BooleanSimplification\)
 
-简化：a AND true =&gt; a，a AND false=&gt;false。。。。
+* 简化：a AND true =&gt; a，a AND false=&gt;false。。。。
+* 消除not：!\(a&gt;b\)=&gt;a&lt;=b ！！\(a&gt;b\)=&gt;a&gt;b
+* 提取通用逻辑表达式，主要是应用&&和\|\|分配律来做的：\( a OR b OR c OR e\) AND \(a OR b OR d OR f\)=&gt;\(a OR b\) OR \(\(c OR e\) AND \(d OR f\)\)
 
-消除not：!\(a&gt;b\)=&gt;a&lt;=b
+### 1.4.4 like化简\(LikeSimplification\)
 
-！！\(a&gt;b\)=&gt;a&gt;b
+### 1.4.5 传递闭包
 
-提取通用逻辑表达式，主要是应用&&和\|\|分配律来做的：
 
-\( a OR b OR c OR e\) AND \(a OR b OR d OR f\)=&gt;\(a OR b\) OR \(\(c OR e\) AND \(d OR f\)\)
-
-4.like化简
 
 ## 1.5 工具类
 
