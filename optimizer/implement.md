@@ -2,7 +2,7 @@
 
 ## 1.1 expression tree
 
-expression tree由UnaryExpression，BinaryExpression，LeafExpression组成。  
+expression tree由UnaryExpression，BinaryExpression，LeafExpression,以及其他节点组成。  
 其中UnaryExpression和BinaryExpressions属于内部节点，LeafExpression属于叶子节点。  
 叶子节点的种类不多，主要有Literal，和Attribute，BoundReference。其中Literal是常量，Attribute是属性，BoundReference将表达式绑定到tuple中的某一个属性并进行求值。
 
@@ -79,11 +79,7 @@ expression tree层级如下：
   +-- Remainder(%)
 ```
 
-
-
 Add,Miltiply满足交换律和结合律，对于这样的运算，可以执行一种叫做ReorderAssociativeOperator的优化，该优化尝试将Add或者Multily的所有子节点flatten，然后执行const folading。例如，x+1+2+y+7会被flatten成\[1,2,7\],\[x,y\],然后将\[1,2\]替换为10，
-
-
 
 ### 1.1.3 谓词表达式
 
@@ -180,7 +176,7 @@ override def eval(input: InternalRow): Any = {
 
 ### 1.1.6 类型转换
 
-  SELECT CAST\( a AS INT\) ，Cast Expression对应于SQL中CAST表达式，用于类型转换。
+SELECT CAST\( a AS INT\) ，Cast Expression对应于SQL中CAST表达式，用于类型转换。
 
 ```
 +-- UnaryExpression
@@ -188,8 +184,6 @@ override def eval(input: InternalRow): Any = {
 ```
 
 ### 1.1.7 日期表达式和字符串表达式
-
-
 
 字符串表达式
 
@@ -199,13 +193,13 @@ override def eval(input: InternalRow): Any = {
      +-- Contains(left:Expression,right:Expression) left.contains(right)
      +-- StartsWith(left:Expression,right:Expression) left.startWith(right)
      +-- EndWith(left:Expression,right:Expression) left.endWith(right)
-	 
+
 +-- UnaryExpression
   +-- Upper(child:Expression)
   +-- Lower(child:Expression)，将child转换为小写
   +-- Length(child:Expression),获取child长度。
   +-- StringReverse(child:Expression)，字符串反转
-  
+
 +-- TernaryExpression
   +-- Substring(str,pos,len)，相当于 str.subString(pos,len)
 
@@ -246,6 +240,14 @@ expression中的free variable.例如x+2+3+y,中的free  variable是x和y。这�
 
 如果一个expression是foldable的，那么可以直接替换为其计算结果。
 
+Literal是foldable。
+
+BinaryExpression是foldable&lt;=&gt;left和right expression都是foldable的。
+
+Cast,UnaryMinus是foldable的&lt;=&gt;child是foldable的。
+
+
+
 ### 1.2.3 isnull
 
 expression的结果是否为null。
@@ -279,8 +281,6 @@ eval\(tuple\)
 ### 1.4.4 like化简\(LikeSimplification\)
 
 ### 1.4.5 传递闭包
-
-
 
 ## 1.5 工具类
 
