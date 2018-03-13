@@ -24,5 +24,6 @@
 
 ## optimizer
 
-* [implement](optimizer/implement.md)
+* [expression-tree](optimizer/implement.md)
+* [Join Reorder](optimizer/join-reorder.md)
 
